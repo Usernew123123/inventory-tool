@@ -17,7 +17,7 @@
         h2 { color: var(--primary); margin-bottom: 5px; }
         
         #fileStatus { font-size: 0.8rem; color: var(--success); font-weight: bold; margin-bottom: 5px; display: none; }
-        .btn-clear { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; font-size: 0.7rem; border-radius: 5px; cursor: pointer; margin-bottom: 10px; }
+        .btn-danger-outline { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 6px 10px; font-size: 0.75rem; border-radius: 5px; cursor: pointer; width: 100%; margin-bottom: 10px; font-weight: bold;}
 
         .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
         label { font-size: 0.75rem; font-weight: bold; color: #666; text-transform: uppercase; display: block; margin-bottom: 8px; }
@@ -33,6 +33,7 @@
         .search-row { display: flex; gap: 5px; margin: 15px 0; }
         .btn-search { width: auto; margin-top: 0; }
 
+        /* Results Display */
         #result { display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .data-box { background: #fff; border: 1px solid #eee; padding: 8px; border-radius: 6px; }
@@ -41,6 +42,8 @@
         
         .filter-section { border-top: 1px solid #eee; margin-top: 15px; padding-top: 15px; }
         #dynVal { margin-top: 10px; padding: 12px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; text-align: center; font-weight: bold; display: none; }
+        
+        .btn-clear-view { background: #6c757d; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -49,7 +52,7 @@
     <div class="header">
         <h2>Jewelry Scanner</h2>
         <div id="fileStatus">✓ Inventory Loaded</div>
-        <button id="clearBtn" class="btn-clear" onclick="clearData()" style="display:none;">Clear Loaded Data</button>
+        <button id="clearBtn" class="btn-danger-outline" onclick="clearData()" style="display:none;">Clear Loaded Data</button>
     </div>
 
     <div class="card" id="uploadCard">
@@ -57,7 +60,7 @@
         <input type="file" id="fileInput" accept=".xlsx, .xls">
     </div>
 
-    <div class="card">
+    <div class="card" id="clientCard">
         <label>2. Select Client Code / Name</label>
         <select id="clientSelect">
             <option value="">-- Choose Client First --</option>
@@ -91,6 +94,8 @@
             <select id="extraFilter" onchange="showExtra()"><option value="">-- Select Detail --</option></select>
             <div id="dynVal"></div>
         </div>
+
+        <button class="btn-clear-view" onclick="resetView()">CLEAR SHOWING DETAILS</button>
     </div>
 </div>
 
@@ -115,24 +120,30 @@
         document.getElementById('uploadCard').style.display = hasData ? 'none' : 'block';
     }
 
+    // Function to hide details and clear inputs
+    function resetView() {
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('manualInput').value = '';
+        document.getElementById('dynVal').style.display = 'none';
+        document.getElementById('extraFilter').selectedIndex = 0;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function clearData() {
-        if(confirm("Delete loaded inventory?")) {
+        if(confirm("Delete all loaded data?")) {
             localStorage.removeItem('jewelInventory');
             location.reload(); 
         }
     }
 
-    // Populate the Client Name dropdown from Excel data
     function populateClientDropdown() {
         const clientSelect = document.getElementById('clientSelect');
         const clients = [...new Set(inventoryData.map(item => item['Client Name']))].filter(Boolean).sort();
-        
         clientSelect.innerHTML = '<option value="">-- Choose Client First --</option>';
-        clients.forEach(client => {
-            let opt = document.createElement('option');
-            opt.value = client;
-            opt.innerText = client;
-            clientSelect.appendChild(opt);
+        clients.forEach(c => {
+            let o = document.createElement('option');
+            o.value = c; o.innerText = c;
+            clientSelect.appendChild(o);
         });
     }
 
@@ -162,10 +173,7 @@
                 isCameraOpen = true;
                 btn.innerText = "CLOSE CAMERA";
                 btn.className = "btn-close";
-            } catch (err) {
-                alert("Camera Error: Ensure HTTPS or Firefox.");
-                readerDiv.style.display = 'none';
-            }
+            } catch (err) { alert("Camera Error: Ensure HTTPS or Firefox."); readerDiv.style.display = 'none'; }
         } else {
             if (html5QrCode) {
                 await html5QrCode.stop();
@@ -182,18 +190,13 @@
         if(val) processLookup(val);
     }
 
-    // Filter by both Client Name and Jewel Code
     function processLookup(barcode) {
-        const selectedClient = document.getElementById('clientSelect').value;
-        
-        if (!selectedClient) {
-            alert("Please select a Client Code from the dropdown first!");
-            return;
-        }
+        const client = document.getElementById('clientSelect').value;
+        if (!client) return alert("Select a Client first!");
 
         activeItem = inventoryData.find(row => 
             String(row['Jewel Code']).trim() === String(barcode).trim() && 
-            String(row['Client Name']).trim() === String(selectedClient).trim()
+            String(row['Client Name']).trim() === String(client).trim()
         );
 
         if (activeItem) {
@@ -211,18 +214,17 @@
             const filter = document.getElementById('extraFilter');
             filter.innerHTML = '<option value="">-- Select Detail --</option>';
             const skip = ['Jewel Code','Style No','Sale Price','Category','Dia Wt','Dia Pcs','Gross Wt','Total Net Wt','Stone Quality'];
-            
-            Object.keys(activeItem).forEach(key => {
-                if(!skip.includes(key)) {
+            Object.keys(activeItem).forEach(k => {
+                if(!skip.includes(k)) {
                     let opt = document.createElement('option');
-                    opt.value = key; opt.innerText = key;
+                    opt.value = k; opt.innerText = k;
                     filter.appendChild(opt);
                 }
             });
             document.getElementById('dynVal').style.display = "none";
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         } else {
-            alert("No match found for Jewel Code: " + barcode + " and Client: " + selectedClient);
+            alert("No match for " + barcode + " with Client " + client);
         }
     }
 
