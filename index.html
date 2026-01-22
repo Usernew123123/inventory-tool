@@ -12,20 +12,21 @@
         :root { --primary: #1a2a6c; --gold: #d4af37; --bg: #f8f9fa; --danger: #e74c3c; --success: #27ae60; --grey: #6c757d; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;}
         
+        /* Navigation Styles */
         .navbar { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
         .menu-icon { font-size: 1.5rem; cursor: pointer; }
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.5s; padding-top: 60px; }
         .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 1.1rem; color: #818181; display: block; transition: 0.3s; }
         .sidebar a:hover { color: #f1f1f1; background: #222; }
-        .sidebar .active-nav { color: var(--gold); border-left: 4px solid var(--gold); }
         .sidebar .closebtn { position: absolute; top: 0; right: 25px; font-size: 36px; color: white; }
 
         .content-section { display: none; padding: 20px; height: calc(100vh - 60px); overflow-y: auto; box-sizing: border-box; }
         .active-section { display: block; }
 
+        /* UI Components */
         .container { width: 100%; max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
         .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        .upload-area { border: 2px dashed var(--gold); background: #fffdf5; padding: 20px; text-align: center; border-radius: 10px; }
+        .upload-area { border: 2px dashed var(--gold); background: #fffdf5; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 15px; }
         
         label { font-size: 0.75rem; font-weight: bold; color: #666; text-transform: uppercase; display: block; margin-bottom: 8px; }
         select, input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; }
@@ -48,8 +49,8 @@
 
     <div id="mySidebar" class="sidebar">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a href="#" id="nav-home" onclick="showSection('home')">Home Page</a>
-        <a href="#" id="nav-search" onclick="showSection('search-jewelry')">Section A: Search Jewelry</a>
+        <a href="#" onclick="showSection('home')">Home Page</a>
+        <a href="#" onclick="showSection('search-jewelry')">Section A: Search Jewelry</a>
     </div>
 
     <div class="navbar">
@@ -61,9 +62,9 @@
     <div id="home" class="content-section active-section">
         <div class="container" style="text-align: center; padding-top: 30px;">
             <h1 style="color: var(--primary);">Jewelry Suite</h1>
-            <p>Diamond Merchandise Management</p>
+            <p>Diamond Merchandise Portal</p>
             <div class="card" style="margin-top: 30px; border-color: var(--gold);">
-                <button onclick="showSection('search-jewelry')" style="background: var(--gold);">Open Inventory Tool</button>
+                <button onclick="showSection('search-jewelry')" style="background: var(--gold);">Open Section A: Search</button>
             </div>
         </div>
     </div>
@@ -71,23 +72,25 @@
     <div id="search-jewelry" class="content-section">
         <div class="container">
             <div class="header" style="text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 15px;">
-                <h2 style="margin:0; color: var(--primary);">Search Jewelry</h2>
-                <div id="fileStatus" style="color: var(--success); font-weight: bold; font-size: 0.8rem; display:none; margin-top: 5px;">✓ Database Active</div>
+                <h2 style="margin:0; color: var(--primary);">Search Inventory</h2>
+                <div id="fileStatus" style="color: var(--success); font-weight: bold; font-size: 0.8rem; display:none; margin-top: 5px;">✓ Inventory Loaded</div>
             </div>
 
-            <div id="loadingOverlay">Syncing Database... Please Wait.</div>
+            <div id="loadingOverlay">Syncing Large Dataset... Please Wait.</div>
 
             <div class="upload-area" id="uploadCard">
-                <label>Upload Inventory Excel</label>
+                <label>Step 1: Upload Inventory File</label>
                 <input type="file" id="fileInput" accept=".xlsx, .xls">
             </div>
 
-            <button id="clearBtn" style="background:none; border: 1px solid var(--danger); color: var(--danger); font-size:0.7rem; margin: 10px 0; display:none;" onclick="clearDatabase()">Wipe Saved Database</button>
+            <button id="clearBtn" style="background:none; border: 1px solid var(--danger); color: var(--danger); font-size:0.7rem; margin-bottom: 10px; display:none;" onclick="clearDatabase()">Wipe Saved Inventory</button>
 
-            <div class="card" style="margin-top:10px;">
-                <label>Select Client Name</label>
-                <input type="text" id="clientFilter" placeholder="Search Client..." onkeyup="filterClients()" style="margin-bottom:5px;">
-                <select id="clientSelect" size="4"></select>
+            <div class="card">
+                <label>Step 2: Select Client Name</label>
+                <input type="text" id="clientFilter" placeholder="Type to search client..." onkeyup="filterClients()" style="margin-bottom: 8px;">
+                <select id="clientSelect">
+                    <option value="">-- Choose Client --</option>
+                </select>
             </div>
 
             <button id="camToggleBtn" class="btn-open" onclick="toggleCamera()">OPEN CAMERA</button>
@@ -112,11 +115,11 @@
                     <div class="data-box" style="grid-column: span 2;"><span class="label-txt">Stone Quality</span><span id="p-stone" class="value-txt">-</span></div>
                 </div>
                 <div style="border-top:1px solid #eee; margin-top:15px; padding-top:15px;">
-                    <label>Other Details</label>
+                    <label>View Extra Details</label>
                     <select id="extraFilter" onchange="showExtra()"><option value="">-- Choose Detail --</option></select>
                     <div id="dynVal" style="margin-top: 10px; padding: 12px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; text-align: center; font-weight: bold; display: none;"></div>
                 </div>
-                <button class="btn-reset" onclick="resetView()">CLEAR SCREEN</button>
+                <button class="btn-reset" onclick="resetView()">CLEAR DETAILS</button>
             </div>
         </div>
     </div>
@@ -128,16 +131,15 @@
     let html5QrCode = null;
     let isCameraOpen = false;
 
-    // --- DATABASE (INDEXEDDB) LOGIC ---
-    const dbName = "JewelryDB";
+    // --- DATABASE (INDEXEDDB) ---
+    const dbName = "JewelryDB_Pro";
     function saveToDB(data) {
         let request = indexedDB.open(dbName, 1);
         request.onupgradeneeded = e => e.target.result.createObjectStore("inventory");
         request.onsuccess = e => {
-            let db = e.target.result;
-            let tx = db.transaction("inventory", "readwrite");
+            let tx = e.target.result.transaction("inventory", "readwrite");
             tx.objectStore("inventory").put(data, "mainData");
-            tx.oncomplete = () => alert("Database Synced Locally!");
+            tx.oncomplete = () => alert("Data saved to local database!");
         };
     }
 
@@ -158,15 +160,14 @@
     }
 
     function clearDatabase() {
-        if (confirm("Clear local database?")) {
+        if (confirm("Permanently delete inventory?")) {
             indexedDB.deleteDatabase(dbName);
             location.reload();
         }
     }
 
-    // --- APP LOGIC ---
+    // --- UI & NAV ---
     window.onload = loadFromDB;
-
     function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
     function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
     function showSection(id) {
@@ -182,8 +183,7 @@
         document.getElementById('loadingOverlay').style.display = 'block';
         const reader = new FileReader();
         reader.onload = (event) => {
-            const data = new Uint8Array(event.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
+            const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array' });
             inventoryData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             saveToDB(inventoryData);
             allClients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
@@ -196,7 +196,7 @@
 
     function populateClientList(list) {
         const sel = document.getElementById('clientSelect');
-        sel.innerHTML = '';
+        sel.innerHTML = '<option value="">-- Choose Client --</option>';
         list.forEach(c => { let o = document.createElement('option'); o.value = c; o.innerText = c; sel.appendChild(o); });
     }
 
@@ -219,7 +219,7 @@
             try {
                 await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => processLookup(text));
                 isCameraOpen = true; btn.innerText = "CLOSE CAMERA"; btn.className = "btn-close";
-            } catch (err) { alert("Use HTTPS or Firefox."); }
+            } catch (err) { alert("Requires HTTPS or Firefox."); }
         } else {
             await html5QrCode.stop();
             isCameraOpen = false; document.getElementById('reader').style.display = 'none';
@@ -248,11 +248,11 @@
             document.getElementById('p-stone').innerText = activeItem['Stone Quality'] || '-';
 
             const filter = document.getElementById('extraFilter');
-            filter.innerHTML = '<option value="">-- View More --</option>';
+            filter.innerHTML = '<option value="">-- Choose Detail --</option>';
             const skip = ['Jewel Code','Style No','Sale Price','Category','Dia Wt','Dia Pcs','Gross Wt','Total Net Wt','Stone Quality'];
             Object.keys(activeItem).forEach(k => { if(!skip.includes(k)) { let o = document.createElement('option'); o.value = k; o.innerText = k; filter.appendChild(o); } });
             document.getElementById('dynVal').style.display = "none";
-        } else { alert("No match found!"); }
+        } else { alert("Not found for this client!"); }
     }
 
     function showExtra() { 
@@ -261,7 +261,10 @@
         if(key && activeItem) { d.innerText = activeItem[key]; d.style.display = "block"; }
     }
 
-    function resetView() { document.getElementById('result').style.display = 'none'; document.getElementById('manualInput').value = ''; }
+    function resetView() { 
+        document.getElementById('result').style.display = 'none'; 
+        document.getElementById('manualInput').value = ''; 
+    }
 </script>
 </body>
 </html>
