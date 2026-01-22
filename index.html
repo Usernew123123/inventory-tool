@@ -10,48 +10,47 @@
 
     <style>
         :root { --primary: #1a2a6c; --gold: #d4af37; --bg: #f8f9fa; --danger: #e74c3c; --success: #27ae60; --grey: #6c757d; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;}
         
-        /* Navigation Styles */
-        .navbar { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        /* Navigation */
+        .navbar { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
         .menu-icon { font-size: 1.5rem; cursor: pointer; }
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.5s; padding-top: 60px; }
         .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 1.1rem; color: #818181; display: block; transition: 0.3s; }
         .sidebar a:hover { color: #f1f1f1; background: #222; }
-        .sidebar .closebtn { position: absolute; top: 0; right: 25px; font-size: 36px; margin-left: 50px; color: white; }
+        .sidebar .active-nav { color: var(--gold); border-left: 4px solid var(--gold); }
+        .sidebar .closebtn { position: absolute; top: 0; right: 25px; font-size: 36px; color: white; }
 
-        /* Content Areas */
-        .content-section { display: none; padding: 20px; flex: 1; overflow-y: auto; }
+        /* Sections */
+        .content-section { display: none; padding: 20px; height: calc(100vh - 60px); overflow-y: auto; box-sizing: border-box; }
         .active-section { display: block; }
 
-        /* Reused Components from Scanner */
+        /* UI Elements */
         .container { width: 100%; max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
-        .header { text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 20px; }
         .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
         label { font-size: 0.75rem; font-weight: bold; color: #666; text-transform: uppercase; display: block; margin-bottom: 8px; }
         select, input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; }
+        
         button { background: var(--primary); color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn-open { background: var(--gold); }
         .btn-close { background: var(--danger); }
         .btn-reset { background: var(--grey); margin-top: 20px; }
-        .btn-search { width: auto; margin-top: 0; }
+        
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-top: 10px; border: 1px solid #ccc; background: #000; }
-        .search-row { display: flex; gap: 5px; margin: 15px 0; }
         .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .data-box { background: #fff; border: 1px solid #eee; padding: 8px; border-radius: 6px; }
         .label-txt { font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }
         .value-txt { font-size: 0.95rem; font-weight: 600; color: #111; display: block; }
-        #dynVal { margin-top: 10px; padding: 12px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; text-align: center; font-weight: bold; display: none; }
-        #fileStatus { font-size: 0.8rem; color: var(--success); font-weight: bold; text-align: center; margin-bottom: 5px; display: none; }
+        #loadingOverlay { display: none; color: var(--primary); font-weight: bold; margin-bottom: 10px; text-align: center;}
     </style>
 </head>
 <body>
 
     <div id="mySidebar" class="sidebar">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a href="#" onclick="showSection('home')">Home Page</a>
-        <a href="#" onclick="showSection('search-jewelry')">Section A: Search Jewelry</a>
-        <p style="color: #444; padding: 25px; font-size: 0.8rem;">More sections coming soon...</p>
+        <a href="#" id="nav-home" onclick="showSection('home')">Home Page</a>
+        <a href="#" id="nav-search" onclick="showSection('search-jewelry')">Section A: Search Jewelry</a>
+        <a href="#" id="nav-section-b" style="opacity: 0.5; cursor: not-allowed;">Section B: Coming Soon</a>
     </div>
 
     <div class="navbar">
@@ -61,42 +60,46 @@
     </div>
 
     <div id="home" class="content-section active-section">
-        <div class="container" style="text-align: center; padding-top: 50px;">
-            <h1 style="color: var(--primary);">Welcome</h1>
-            <p>Diamond Jewelry Merchandise Suite</p>
-            <p style="color: #666; font-size: 0.9rem;">Select a tool from the menu to get started.</p>
-            <button onclick="showSection('search-jewelry')" style="background: var(--gold); margin-top: 30px;">Go to Search Jewelry</button>
+        <div class="container" style="text-align: center; padding-top: 30px;">
+            <h1 style="color: var(--primary);">Jewelry Suite</h1>
+            <p>Diamond Jewelry Merchandise Team</p>
+            <div class="card" style="margin-top: 30px; border-color: var(--gold);">
+                <p style="font-size: 0.9rem;">Quick Access:</p>
+                <button onclick="showSection('search-jewelry')" style="background: var(--gold);">Search Inventory</button>
+            </div>
         </div>
     </div>
 
     <div id="search-jewelry" class="content-section">
         <div class="container">
-            <div class="header">
-                <h2 style="margin:0;">Search Jewelry</h2>
-                <div id="fileStatus">✓ Inventory Loaded</div>
-                <button id="clearBtn" style="background:none; border: 1px solid var(--danger); color: var(--danger); font-size:0.7rem; width: auto; padding: 5px; margin-bottom: 10px; display:none;" onclick="clearData()">Clear Data</button>
+            <div class="header" style="text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 15px;">
+                <h2 style="margin:0; color: var(--primary);">Search Jewelry</h2>
+                <div id="fileStatus" style="color: var(--success); font-weight: bold; font-size: 0.8rem; display:none; margin-top: 5px;">✓ Inventory Active</div>
             </div>
 
+            <div id="loadingOverlay">Processing large file... Please wait.</div>
+
             <div class="card" id="uploadCard">
-                <label>1. Upload Excel</label>
+                <label>1. Upload Inventory (Max Support 50MB+)</label>
                 <input type="file" id="fileInput" accept=".xlsx, .xls">
+                <button id="clearBtn" style="background:none; border: 1px solid var(--danger); color: var(--danger); font-size:0.7rem; margin-top: 10px; display:none;" onclick="clearData()">Clear All Memory</button>
             </div>
 
             <div class="card">
                 <label>2. Select Client Name</label>
-                <select id="clientSelect"><option value="">-- Choose Client First --</option></select>
+                <select id="clientSelect"><option value="">-- Select Client --</option></select>
             </div>
 
             <button id="camToggleBtn" class="btn-open" onclick="toggleCamera()">OPEN CAMERA</button>
             
-            <div class="search-row">
-                <input type="text" id="manualInput" placeholder="Style No or Jewel Code...">
-                <button class="btn-search" onclick="manualSearch()">Find</button>
+            <div style="display: flex; gap: 5px; margin: 15px 0;">
+                <input type="text" id="manualInput" placeholder="Style No or Jewel Code..." style="flex:1;">
+                <button onclick="manualSearch()" style="width: auto; margin-top: 0;">Find</button>
             </div>
 
             <div id="reader"></div>
 
-            <div id="result" style="display:none; border-top: 2px solid #eee; padding-top:15px; margin-top:15px;">
+            <div id="result" style="display:none; border-top: 2px solid #eee; padding-top:15px;">
                 <div class="perm-grid">
                     <div class="data-box"><span class="label-txt">Jewel Code</span><span id="p-jewel" class="value-txt">-</span></div>
                     <div class="data-box"><span class="label-txt">Style No</span><span id="p-style" class="value-txt">-</span></div>
@@ -110,12 +113,12 @@
                 </div>
 
                 <div style="border-top:1px solid #eee; margin-top:15px; padding-top:15px;">
-                    <label>View Other Details</label>
-                    <select id="extraFilter" onchange="showExtra()"><option value="">-- Select Detail --</option></select>
-                    <div id="dynVal"></div>
+                    <label>Other Details</label>
+                    <select id="extraFilter" onchange="showExtra()"><option value="">-- Choose --</option></select>
+                    <div id="dynVal" style="margin-top: 10px; padding: 12px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; text-align: center; font-weight: bold; display: none;"></div>
                 </div>
 
-                <button class="btn-reset" onclick="resetView()">CLEAR DETAILS</button>
+                <button class="btn-reset" onclick="resetView()">CLEAR SCREEN</button>
             </div>
         </div>
     </div>
@@ -126,105 +129,96 @@
     let html5QrCode = null;
     let isCameraOpen = false;
 
-    // --- NAVIGATION LOGIC ---
+    // Navigation
     function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
     function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
-
-    function showSection(sectionId) {
-        document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active-section'));
-        document.getElementById(sectionId).classList.add('active-section');
-        document.getElementById('navTitle').innerText = sectionId === 'home' ? 'Home' : 'Search Jewelry';
+    function showSection(id) {
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active-section'));
+        document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active-nav'));
+        document.getElementById(id).classList.add('active-section');
+        document.getElementById('nav-'+id.split('-')[0]).classList.add('active-nav');
+        document.getElementById('navTitle').innerText = id === 'home' ? 'Home' : 'Search Jewelry';
         closeNav();
-        if (isCameraOpen && sectionId !== 'search-jewelry') toggleCamera(); // Auto-stop camera if leaving search
+        if (isCameraOpen && id !== 'search-jewelry') toggleCamera();
     }
 
-    // --- SECTION A LOGIC (From previous versions) ---
+    // Initialize on Load
     window.onload = () => {
-        const savedData = localStorage.getItem('jewelInventory');
-        if (savedData) {
-            inventoryData = JSON.parse(savedData);
-            populateClientDropdown();
-            updateUIState(true);
+        const saved = localStorage.getItem('jewelInventory');
+        if (saved) {
+            try {
+                inventoryData = JSON.parse(saved);
+                populateClientDropdown();
+                updateUIState(true);
+            } catch(e) { localStorage.removeItem('jewelInventory'); }
         }
     };
 
     function updateUIState(hasData) {
         document.getElementById('fileStatus').style.display = hasData ? 'block' : 'none';
-        document.getElementById('clearBtn').style.display = hasData ? 'inline-block' : 'none';
+        document.getElementById('clearBtn').style.display = hasData ? 'block' : 'none';
         document.getElementById('uploadCard').style.display = hasData ? 'none' : 'block';
     }
 
-    function resetView() {
-        document.getElementById('result').style.display = 'none';
-        document.getElementById('manualInput').value = '';
-        document.getElementById('dynVal').style.display = 'none';
-        document.getElementById('extraFilter').selectedIndex = 0;
-    }
-
-    function clearData() {
-        if(confirm("Delete loaded inventory?")) { localStorage.removeItem('jewelInventory'); location.reload(); }
-    }
+    function clearData() { if(confirm("Clear memory?")) { localStorage.removeItem('jewelInventory'); location.reload(); } }
 
     function populateClientDropdown() {
-        const clientSelect = document.getElementById('clientSelect');
-        const clients = [...new Set(inventoryData.map(item => item['Client Name']))].filter(Boolean).sort();
-        clientSelect.innerHTML = '<option value="">-- Choose Client First --</option>';
-        clients.forEach(c => {
-            let o = document.createElement('option');
-            o.value = c; o.innerText = c;
-            clientSelect.appendChild(o);
-        });
+        const sel = document.getElementById('clientSelect');
+        const clients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
+        sel.innerHTML = '<option value="">-- Select Client --</option>';
+        clients.forEach(c => { let o = document.createElement('option'); o.value = c; o.innerText = c; sel.appendChild(o); });
     }
 
+    // Large File Processing Logic
     document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        document.getElementById('loadingOverlay').style.display = 'block';
         const reader = new FileReader();
+        
         reader.onload = (event) => {
             const data = new Uint8Array(event.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
+            // Use cellDates for better performance on large files
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
             inventoryData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            localStorage.setItem('jewelInventory', JSON.stringify(inventoryData));
-            populateClientDropdown();
-            updateUIState(true);
-            alert("Inventory Loaded!");
+            
+            try {
+                localStorage.setItem('jewelInventory', JSON.stringify(inventoryData));
+                populateClientDropdown();
+                updateUIState(true);
+                alert("Inventory Synced!");
+            } catch(err) {
+                alert("File too large for browser memory. It will work for this session only.");
+            }
+            document.getElementById('loadingOverlay').style.display = 'none';
         };
-        reader.readAsArrayBuffer(e.target.files[0]);
+        reader.readAsArrayBuffer(file);
     });
 
     async function toggleCamera() {
         const btn = document.getElementById('camToggleBtn');
-        const readerDiv = document.getElementById('reader');
         if (!isCameraOpen) {
-            readerDiv.style.display = 'block';
-            if (!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); }
+            document.getElementById('reader').style.display = 'block';
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             try {
-                await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, (text) => processLookup(text));
+                await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => processLookup(text));
                 isCameraOpen = true; btn.innerText = "CLOSE CAMERA"; btn.className = "btn-close";
-            } catch (err) { alert("Use HTTPS or Firefox."); readerDiv.style.display = 'none'; }
+            } catch (err) { alert("Use HTTPS or Firefox."); }
         } else {
-            if (html5QrCode) {
-                await html5QrCode.stop();
-                isCameraOpen = false; readerDiv.style.display = 'none';
-                btn.innerText = "OPEN CAMERA"; btn.className = "btn-open";
-            }
+            await html5QrCode.stop();
+            isCameraOpen = false; document.getElementById('reader').style.display = 'none';
+            btn.innerText = "OPEN CAMERA"; btn.className = "btn-open";
         }
     }
 
-    function manualSearch() {
-        const val = document.getElementById('manualInput').value;
-        if(val) processLookup(val);
-    }
+    function manualSearch() { const val = document.getElementById('manualInput').value; if(val) processLookup(val); }
 
-    function processLookup(inputVal) {
+    function processLookup(val) {
         const client = document.getElementById('clientSelect').value;
-        if (!client) return alert("Select a Client first!");
-        const searchStr = String(inputVal).trim().toLowerCase();
-
-        activeItem = inventoryData.find(row => {
-            const jMatch = String(row['Jewel Code']).trim().toLowerCase() === searchStr;
-            const sMatch = String(row['Style No']).trim().toLowerCase() === searchStr;
-            const cMatch = String(row['Client Name']).trim() === String(client).trim();
-            return (jMatch || sMatch) && cMatch;
-        });
+        if (!client) return alert("Select Client!");
+        const s = String(val).trim().toLowerCase();
+        activeItem = inventoryData.find(r => (String(r['Jewel Code']).toLowerCase() === s || String(r['Style No']).toLowerCase() === s) && String(r['Client Name']) === client);
 
         if (activeItem) {
             document.getElementById('result').style.display = "block";
@@ -239,24 +233,22 @@
             document.getElementById('p-stone').innerText = activeItem['Stone Quality'] || '-';
 
             const filter = document.getElementById('extraFilter');
-            filter.innerHTML = '<option value="">-- Select Detail --</option>';
+            filter.innerHTML = '<option value="">-- Choose --</option>';
             const skip = ['Jewel Code','Style No','Sale Price','Category','Dia Wt','Dia Pcs','Gross Wt','Total Net Wt','Stone Quality'];
-            Object.keys(activeItem).forEach(k => {
-                if(!skip.includes(k)) {
-                    let opt = document.createElement('option');
-                    opt.value = k; opt.innerText = k;
-                    filter.appendChild(opt);
-                }
-            });
+            Object.keys(activeItem).forEach(k => { if(!skip.includes(k)) { let o = document.createElement('option'); o.value = k; o.innerText = k; filter.appendChild(o); } });
             document.getElementById('dynVal').style.display = "none";
-            document.getElementById('search-jewelry').scrollTo({ top: document.getElementById('search-jewelry').scrollHeight, behavior: 'smooth' });
-        } else { alert("No match found!"); }
+        } else { alert("Not found!"); }
     }
 
-    function showExtra() {
+    function showExtra() { 
         const key = document.getElementById('extraFilter').value;
-        const disp = document.getElementById('dynVal');
-        if(key && activeItem) { disp.innerText = activeItem[key]; disp.style.display = "block"; }
+        const d = document.getElementById('dynVal');
+        if(key && activeItem) { d.innerText = activeItem[key]; d.style.display = "block"; }
+    }
+
+    function resetView() { 
+        document.getElementById('result').style.display = 'none'; 
+        document.getElementById('manualInput').value = ''; 
     }
 </script>
 </body>
