@@ -12,7 +12,6 @@
         :root { --primary: #1a2a6c; --gold: #d4af37; --bg: #f8f9fa; --danger: #e74c3c; --success: #27ae60; --grey: #6c757d; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;}
         
-        /* Navigation */
         .navbar { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
         .menu-icon { font-size: 1.5rem; cursor: pointer; }
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.5s; padding-top: 60px; }
@@ -23,7 +22,6 @@
         .content-section { display: none; padding: 20px; height: calc(100vh - 60px); overflow-y: auto; box-sizing: border-box; }
         .active-section { display: block; }
 
-        /* UI Components */
         .container { width: 100%; max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
         .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
         .upload-area { border: 2px dashed var(--gold); background: #fffdf5; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 15px; }
@@ -129,7 +127,6 @@
     let html5QrCode = null;
     let isCameraOpen = false;
 
-    // --- DATABASE (INDEXEDDB) ---
     const dbName = "JewelryDB_Pro";
     function saveToDB(data) {
         let request = indexedDB.open(dbName, 1);
@@ -163,7 +160,6 @@
         }
     }
 
-    // --- APP FLOW ---
     window.onload = loadFromDB;
     function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
     function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
@@ -192,9 +188,16 @@
 
     function populateClientDropdown() {
         const sel = document.getElementById('clientSelect');
-        const clients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
+        // Extract clients and handle potential undefined/null values
+        const clients = [...new Set(inventoryData.map(i => i['Client Name'] ? String(i['Client Name']).trim() : "Blank"))].sort();
+        
         sel.innerHTML = '<option value="">-- Choose Client --</option>';
-        clients.forEach(c => { let o = document.createElement('option'); o.value = c; o.innerText = c; sel.appendChild(o); });
+        clients.forEach(c => {
+            let o = document.createElement('option');
+            o.value = (c === "Blank") ? "" : c; // Value is empty string for Blank rows
+            o.innerText = c;
+            sel.appendChild(o);
+        });
     }
 
     function updateUIState(hasData) {
@@ -223,9 +226,15 @@
 
     function processLookup(val) {
         const client = document.getElementById('clientSelect').value;
-        if (!client) return alert("Select a Client first!");
         const s = String(val).trim().toLowerCase();
-        activeItem = inventoryData.find(r => (String(r['Jewel Code']).toLowerCase() === s || String(r['Style No']).toLowerCase() === s) && String(r['Client Name']) === client);
+        
+        // Find logic that explicitly handles empty/blank client values
+        activeItem = inventoryData.find(r => {
+            const rowClient = r['Client Name'] ? String(r['Client Name']).trim() : "";
+            const matchesClient = rowClient === client;
+            const matchesCode = (String(r['Jewel Code']).toLowerCase() === s || String(r['Style No']).toLowerCase() === s);
+            return matchesClient && matchesCode;
+        });
 
         if (activeItem) {
             document.getElementById('result').style.display = "block";
