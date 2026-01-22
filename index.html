@@ -41,7 +41,11 @@
         .data-box { background: #fff; border: 1px solid #eee; padding: 8px; border-radius: 6px; }
         .label-txt { font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }
         .value-txt { font-size: 0.95rem; font-weight: 600; color: #111; display: block; }
-        #loadingOverlay { display: none; color: var(--primary); font-weight: bold; margin-bottom: 10px; text-align: center;}
+        
+        /* Loading & Search UI */
+        #loadingOverlay { display: none; text-align: center; padding: 10px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; color: #856404; font-weight: bold; margin-bottom: 15px; }
+        .client-search-box { margin-bottom: 5px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none; }
+        .client-dropdown { border-top-left-radius: 0; border-top-right-radius: 0; }
     </style>
 </head>
 <body>
@@ -50,7 +54,7 @@
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <a href="#" id="nav-home" onclick="showSection('home')">Home Page</a>
         <a href="#" id="nav-search" onclick="showSection('search-jewelry')">Section A: Search Jewelry</a>
-        <a href="#" id="nav-section-b" style="opacity: 0.5; cursor: not-allowed;">Section B: Coming Soon</a>
+        <a href="#" id="nav-section-b" style="opacity: 0.4; cursor: default;">Section B: Coming Soon</a>
     </div>
 
     <div class="navbar">
@@ -62,10 +66,10 @@
     <div id="home" class="content-section active-section">
         <div class="container" style="text-align: center; padding-top: 30px;">
             <h1 style="color: var(--primary);">Jewelry Suite</h1>
-            <p>Diamond Jewelry Merchandise Team</p>
+            <p>Merchandise Team Portal</p>
             <div class="card" style="margin-top: 30px; border-color: var(--gold);">
-                <p style="font-size: 0.9rem;">Quick Access:</p>
-                <button onclick="showSection('search-jewelry')" style="background: var(--gold);">Search Inventory</button>
+                <p style="font-size: 0.9rem;">Quick Access Tool:</p>
+                <button onclick="showSection('search-jewelry')" style="background: var(--gold);">Open Search Inventory</button>
             </div>
         </div>
     </div>
@@ -73,21 +77,22 @@
     <div id="search-jewelry" class="content-section">
         <div class="container">
             <div class="header" style="text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 15px;">
-                <h2 style="margin:0; color: var(--primary);">Search Jewelry</h2>
-                <div id="fileStatus" style="color: var(--success); font-weight: bold; font-size: 0.8rem; display:none; margin-top: 5px;">✓ Inventory Active</div>
+                <h2 style="margin:0; color: var(--primary);">Inventory Search</h2>
+                <div id="fileStatus" style="color: var(--success); font-weight: bold; font-size: 0.8rem; display:none; margin-top: 5px;">✓ Data Active (In-Memory)</div>
             </div>
 
-            <div id="loadingOverlay">Processing large file... Please wait.</div>
+            <div id="loadingOverlay">Processing Large File... Please wait.</div>
 
             <div class="card" id="uploadCard">
-                <label>1. Upload Inventory (Max Support 50MB+)</label>
+                <label>1. Upload Inventory (Supports 50MB+)</label>
                 <input type="file" id="fileInput" accept=".xlsx, .xls">
-                <button id="clearBtn" style="background:none; border: 1px solid var(--danger); color: var(--danger); font-size:0.7rem; margin-top: 10px; display:none;" onclick="clearData()">Clear All Memory</button>
+                <p style="font-size: 0.7rem; color: #888; margin-top: 8px;">Large files are held in RAM for speed. Re-upload if you refresh.</p>
             </div>
 
             <div class="card">
-                <label>2. Select Client Name</label>
-                <select id="clientSelect"><option value="">-- Select Client --</option></select>
+                <label>2. Filter & Select Client</label>
+                <input type="text" id="clientFilter" class="client-search-box" placeholder="Type to search client..." onkeyup="filterClients()">
+                <select id="clientSelect" class="client-dropdown" size="4"><option value="">-- No File Uploaded --</option></select>
             </div>
 
             <button id="camToggleBtn" class="btn-open" onclick="toggleCamera()">OPEN CAMERA</button>
@@ -99,7 +104,7 @@
 
             <div id="reader"></div>
 
-            <div id="result" style="display:none; border-top: 2px solid #eee; padding-top:15px;">
+            <div id="result" style="display:none; border-top: 2px solid #eee; padding-top:15px; margin-top: 15px;">
                 <div class="perm-grid">
                     <div class="data-box"><span class="label-txt">Jewel Code</span><span id="p-jewel" class="value-txt">-</span></div>
                     <div class="data-box"><span class="label-txt">Style No</span><span id="p-style" class="value-txt">-</span></div>
@@ -113,8 +118,8 @@
                 </div>
 
                 <div style="border-top:1px solid #eee; margin-top:15px; padding-top:15px;">
-                    <label>Other Details</label>
-                    <select id="extraFilter" onchange="showExtra()"><option value="">-- Choose --</option></select>
+                    <label>Additional Details</label>
+                    <select id="extraFilter" onchange="showExtra()"><option value="">-- Choose Detail --</option></select>
                     <div id="dynVal" style="margin-top: 10px; padding: 12px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; text-align: center; font-weight: bold; display: none;"></div>
                 </div>
 
@@ -125,6 +130,7 @@
 
 <script>
     let inventoryData = [];
+    let allClients = [];
     let activeItem = null;
     let html5QrCode = null;
     let isCameraOpen = false;
@@ -134,42 +140,13 @@
     function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
     function showSection(id) {
         document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active-section'));
-        document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active-nav'));
         document.getElementById(id).classList.add('active-section');
-        document.getElementById('nav-'+id.split('-')[0]).classList.add('active-nav');
         document.getElementById('navTitle').innerText = id === 'home' ? 'Home' : 'Search Jewelry';
         closeNav();
         if (isCameraOpen && id !== 'search-jewelry') toggleCamera();
     }
 
-    // Initialize on Load
-    window.onload = () => {
-        const saved = localStorage.getItem('jewelInventory');
-        if (saved) {
-            try {
-                inventoryData = JSON.parse(saved);
-                populateClientDropdown();
-                updateUIState(true);
-            } catch(e) { localStorage.removeItem('jewelInventory'); }
-        }
-    };
-
-    function updateUIState(hasData) {
-        document.getElementById('fileStatus').style.display = hasData ? 'block' : 'none';
-        document.getElementById('clearBtn').style.display = hasData ? 'block' : 'none';
-        document.getElementById('uploadCard').style.display = hasData ? 'none' : 'block';
-    }
-
-    function clearData() { if(confirm("Clear memory?")) { localStorage.removeItem('jewelInventory'); location.reload(); } }
-
-    function populateClientDropdown() {
-        const sel = document.getElementById('clientSelect');
-        const clients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
-        sel.innerHTML = '<option value="">-- Select Client --</option>';
-        clients.forEach(c => { let o = document.createElement('option'); o.value = c; o.innerText = c; sel.appendChild(o); });
-    }
-
-    // Large File Processing Logic
+    // High-Performance File Loading
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -179,22 +156,37 @@
         
         reader.onload = (event) => {
             const data = new Uint8Array(event.target.result);
-            // Use cellDates for better performance on large files
-            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            // Optimized for massive sheets
+            const workbook = XLSX.read(data, { 
+                type: 'array', 
+                bookSheets: true,
+                cellDates: false,
+                cellText: false 
+            });
             inventoryData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             
-            try {
-                localStorage.setItem('jewelInventory', JSON.stringify(inventoryData));
-                populateClientDropdown();
-                updateUIState(true);
-                alert("Inventory Synced!");
-            } catch(err) {
-                alert("File too large for browser memory. It will work for this session only.");
-            }
+            allClients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
+            populateClientList(allClients);
+            
+            document.getElementById('fileStatus').style.display = 'block';
+            document.getElementById('uploadCard').style.display = 'none';
             document.getElementById('loadingOverlay').style.display = 'none';
+            alert("Success: " + inventoryData.length + " Items Loaded.");
         };
         reader.readAsArrayBuffer(file);
     });
+
+    function populateClientList(list) {
+        const sel = document.getElementById('clientSelect');
+        sel.innerHTML = '';
+        list.forEach(c => { let o = document.createElement('option'); o.value = c; o.innerText = c; sel.appendChild(o); });
+    }
+
+    function filterClients() {
+        const filter = document.getElementById('clientFilter').value.toLowerCase();
+        const filtered = allClients.filter(c => c.toLowerCase().includes(filter));
+        populateClientList(filtered);
+    }
 
     async function toggleCamera() {
         const btn = document.getElementById('camToggleBtn');
@@ -216,9 +208,20 @@
 
     function processLookup(val) {
         const client = document.getElementById('clientSelect').value;
-        if (!client) return alert("Select Client!");
+        if (!client) return alert("Select a Client first!");
+        
         const s = String(val).trim().toLowerCase();
-        activeItem = inventoryData.find(r => (String(r['Jewel Code']).toLowerCase() === s || String(r['Style No']).toLowerCase() === s) && String(r['Client Name']) === client);
+        // Optimized find loop
+        activeItem = null;
+        for(let i=0; i < inventoryData.length; i++) {
+            let row = inventoryData[i];
+            if (String(row['Client Name']) === client) {
+                if (String(row['Jewel Code']).toLowerCase() === s || String(row['Style No']).toLowerCase() === s) {
+                    activeItem = row;
+                    break;
+                }
+            }
+        }
 
         if (activeItem) {
             document.getElementById('result').style.display = "block";
@@ -233,11 +236,12 @@
             document.getElementById('p-stone').innerText = activeItem['Stone Quality'] || '-';
 
             const filter = document.getElementById('extraFilter');
-            filter.innerHTML = '<option value="">-- Choose --</option>';
+            filter.innerHTML = '<option value="">-- Choose Detail --</option>';
             const skip = ['Jewel Code','Style No','Sale Price','Category','Dia Wt','Dia Pcs','Gross Wt','Total Net Wt','Stone Quality'];
             Object.keys(activeItem).forEach(k => { if(!skip.includes(k)) { let o = document.createElement('option'); o.value = k; o.innerText = k; filter.appendChild(o); } });
             document.getElementById('dynVal').style.display = "none";
-        } else { alert("Not found!"); }
+            document.getElementById('search-jewelry').scrollTo({ top: document.getElementById('search-jewelry').scrollHeight, behavior: 'smooth' });
+        } else { alert("No match found for " + val); }
     }
 
     function showExtra() { 
