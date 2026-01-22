@@ -14,35 +14,33 @@
         .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
         
         .header { text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 20px; }
-        h2 { color: var(--primary); margin-bottom: 10px; }
+        h2 { color: var(--primary); margin-bottom: 5px; }
         
         #fileStatus { font-size: 0.8rem; color: var(--success); font-weight: bold; margin-bottom: 5px; display: none; }
         .btn-clear { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; font-size: 0.7rem; border-radius: 5px; cursor: pointer; margin-bottom: 10px; }
 
         .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        button { background: var(--primary); color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
+        label { font-size: 0.75rem; font-weight: bold; color: #666; text-transform: uppercase; display: block; margin-bottom: 8px; }
         
-        /* Camera Toggle Button Colors */
-        .btn-open { background: var(--gold); margin-bottom: 10px; }
-        .btn-close { background: var(--danger); margin-bottom: 10px; }
+        select, input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; }
+        
+        button { background: var(--primary); color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-open { background: var(--gold); }
+        .btn-close { background: var(--danger); }
         
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-top: 10px; border: 1px solid #ccc; background: #000; }
         
         .search-row { display: flex; gap: 5px; margin: 15px 0; }
-        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
-        .btn-search { width: auto; background: var(--primary); }
+        .btn-search { width: auto; margin-top: 0; }
 
         #result { display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .data-box { background: #fff; border: 1px solid #eee; padding: 8px; border-radius: 6px; }
-        .label { font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }
-        .value { font-size: 0.95rem; font-weight: 600; color: #111; display: block; }
+        .label-txt { font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }
+        .value-txt { font-size: 0.95rem; font-weight: 600; color: #111; display: block; }
         
         .filter-section { border-top: 1px solid #eee; margin-top: 15px; padding-top: 15px; }
-        select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; }
         #dynVal { margin-top: 10px; padding: 12px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; text-align: center; font-weight: bold; display: none; }
-        
-        .error-msg { color: var(--danger); background: #fee; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -50,13 +48,20 @@
 <div class="container">
     <div class="header">
         <h2>Jewelry Scanner</h2>
-        <div id="fileStatus">✓ Inventory Data Active</div>
+        <div id="fileStatus">✓ Inventory Loaded</div>
         <button id="clearBtn" class="btn-clear" onclick="clearData()" style="display:none;">Clear Loaded Data</button>
     </div>
 
     <div class="card" id="uploadCard">
-        <label style="font-size: 0.8rem; font-weight: bold;">STEP 1: UPLOAD EXCEL</label>
+        <label>1. Upload Inventory Excel</label>
         <input type="file" id="fileInput" accept=".xlsx, .xls">
+    </div>
+
+    <div class="card">
+        <label>2. Select Client Code / Name</label>
+        <select id="clientSelect">
+            <option value="">-- Choose Client First --</option>
+        </select>
     </div>
 
     <button id="camToggleBtn" class="btn-open" onclick="toggleCamera()">OPEN CAMERA</button>
@@ -66,24 +71,24 @@
         <button class="btn-search" onclick="manualSearch()">Find</button>
     </div>
 
-    <div id="errorMessage" class="error-msg"></div>
     <div id="reader"></div>
 
     <div id="result">
         <div class="perm-grid">
-            <div class="data-box"><span class="label">Jewel Code</span><span id="p-jewel" class="value">-</span></div>
-            <div class="data-box"><span class="label">Style No</span><span id="p-style" class="value">-</span></div>
-            <div class="data-box"><span class="label">Sale Price</span><span id="p-price" class="value">-</span></div>
-            <div class="data-box"><span class="label">Category</span><span id="p-cat" class="value">-</span></div>
-            <div class="data-box"><span class="label">Dia Wt</span><span id="p-diawt" class="value">-</span></div>
-            <div class="data-box"><span class="label">Dia Pcs</span><span id="p-diapcs" class="value">-</span></div>
-            <div class="data-box"><span class="label">Gross Wt</span><span id="p-gross" class="value">-</span></div>
-            <div class="data-box"><span class="label">Net Wt</span><span id="p-net" class="value">-</span></div>
-            <div class="data-box" style="grid-column: span 2;"><span class="label">Stone Quality</span><span id="p-stone" class="value">-</span></div>
+            <div class="data-box"><span class="label-txt">Jewel Code</span><span id="p-jewel" class="value-txt">-</span></div>
+            <div class="data-box"><span class="label-txt">Style No</span><span id="p-style" class="value-txt">-</span></div>
+            <div class="data-box"><span class="label-txt">Sale Price</span><span id="p-price" class="value-txt">-</span></div>
+            <div class="data-box"><span class="label-txt">Category</span><span id="p-cat" class="value-txt">-</span></div>
+            <div class="data-box"><span class="label-txt">Dia Wt</span><span id="p-diawt" class="value-txt">-</span></div>
+            <div class="data-box"><span class="label-txt">Dia Pcs</span><span id="p-diapcs" class="value-txt">-</span></div>
+            <div class="data-box"><span class="label-txt">Gross Wt</span><span id="p-gross" class="value-txt">-</span></div>
+            <div class="data-box"><span class="label-txt">Net Wt</span><span id="p-net" class="value-txt">-</span></div>
+            <div class="data-box" style="grid-column: span 2;"><span class="label-txt">Stone Quality</span><span id="p-stone" class="value-txt">-</span></div>
         </div>
 
         <div class="filter-section">
-            <select id="extraFilter" onchange="showExtra()"><option value="">-- View Other Details --</option></select>
+            <label>View Other Details</label>
+            <select id="extraFilter" onchange="showExtra()"><option value="">-- Select Detail --</option></select>
             <div id="dynVal"></div>
         </div>
     </div>
@@ -99,6 +104,7 @@
         const savedData = localStorage.getItem('jewelInventory');
         if (savedData) {
             inventoryData = JSON.parse(savedData);
+            populateClientDropdown();
             updateUIState(true);
         }
     };
@@ -116,6 +122,20 @@
         }
     }
 
+    // Populate the Client Name dropdown from Excel data
+    function populateClientDropdown() {
+        const clientSelect = document.getElementById('clientSelect');
+        const clients = [...new Set(inventoryData.map(item => item['Client Name']))].filter(Boolean).sort();
+        
+        clientSelect.innerHTML = '<option value="">-- Choose Client First --</option>';
+        clients.forEach(client => {
+            let opt = document.createElement('option');
+            opt.value = client;
+            opt.innerText = client;
+            clientSelect.appendChild(opt);
+        });
+    }
+
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -123,37 +143,30 @@
             const workbook = XLSX.read(data, { type: 'array' });
             inventoryData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             localStorage.setItem('jewelInventory', JSON.stringify(inventoryData));
+            populateClientDropdown();
             updateUIState(true);
             alert("Inventory Loaded!");
         };
         reader.readAsArrayBuffer(e.target.files[0]);
     });
 
-    // --- NEW: Toggle Camera Logic ---
     async function toggleCamera() {
         const btn = document.getElementById('camToggleBtn');
         const readerDiv = document.getElementById('reader');
 
         if (!isCameraOpen) {
-            // Start Camera
             readerDiv.style.display = 'block';
             if (!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); }
-            
             try {
-                await html5QrCode.start(
-                    { facingMode: "environment" }, 
-                    { fps: 10, qrbox: { width: 250, height: 150 } },
-                    (text) => processLookup(text)
-                );
+                await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, (text) => processLookup(text));
                 isCameraOpen = true;
                 btn.innerText = "CLOSE CAMERA";
                 btn.className = "btn-close";
             } catch (err) {
-                alert("Camera Error: Ensure you are using HTTPS or Firefox.");
+                alert("Camera Error: Ensure HTTPS or Firefox.");
                 readerDiv.style.display = 'none';
             }
         } else {
-            // Stop Camera
             if (html5QrCode) {
                 await html5QrCode.stop();
                 isCameraOpen = false;
@@ -169,10 +182,19 @@
         if(val) processLookup(val);
     }
 
+    // Filter by both Client Name and Jewel Code
     function processLookup(barcode) {
-        if (inventoryData.length === 0) return alert("Upload Excel first!");
+        const selectedClient = document.getElementById('clientSelect').value;
         
-        activeItem = inventoryData.find(row => String(row['Jewel Code']).trim() === String(barcode).trim());
+        if (!selectedClient) {
+            alert("Please select a Client Code from the dropdown first!");
+            return;
+        }
+
+        activeItem = inventoryData.find(row => 
+            String(row['Jewel Code']).trim() === String(barcode).trim() && 
+            String(row['Client Name']).trim() === String(selectedClient).trim()
+        );
 
         if (activeItem) {
             document.getElementById('result').style.display = "block";
@@ -187,7 +209,7 @@
             document.getElementById('p-stone').innerText = activeItem['Stone Quality'] || '-';
 
             const filter = document.getElementById('extraFilter');
-            filter.innerHTML = '<option value="">-- View Other Details --</option>';
+            filter.innerHTML = '<option value="">-- Select Detail --</option>';
             const skip = ['Jewel Code','Style No','Sale Price','Category','Dia Wt','Dia Pcs','Gross Wt','Total Net Wt','Stone Quality'];
             
             Object.keys(activeItem).forEach(key => {
@@ -198,10 +220,9 @@
                 }
             });
             document.getElementById('dynVal').style.display = "none";
-            // Auto-scroll to results on mobile
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         } else {
-            alert("Code " + barcode + " not found!");
+            alert("No match found for Jewel Code: " + barcode + " and Client: " + selectedClient);
         }
     }
 
