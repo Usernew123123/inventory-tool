@@ -12,7 +12,7 @@
         :root { --primary: #1a2a6c; --gold: #d4af37; --bg: #f8f9fa; --danger: #e74c3c; --success: #27ae60; --grey: #6c757d; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;}
         
-        /* Navigation Styles */
+        /* Navigation */
         .navbar { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
         .menu-icon { font-size: 1.5rem; cursor: pointer; }
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.5s; padding-top: 60px; }
@@ -64,7 +64,7 @@
             <h1 style="color: var(--primary);">Jewelry Suite</h1>
             <p>Diamond Merchandise Portal</p>
             <div class="card" style="margin-top: 30px; border-color: var(--gold);">
-                <button onclick="showSection('search-jewelry')" style="background: var(--gold);">Open Section A: Search</button>
+                <button onclick="showSection('search-jewelry')" style="background: var(--gold);">Open Search Tool</button>
             </div>
         </div>
     </div>
@@ -76,10 +76,10 @@
                 <div id="fileStatus" style="color: var(--success); font-weight: bold; font-size: 0.8rem; display:none; margin-top: 5px;">✓ Inventory Loaded</div>
             </div>
 
-            <div id="loadingOverlay">Syncing Large Dataset... Please Wait.</div>
+            <div id="loadingOverlay">Processing Database... Please Wait.</div>
 
             <div class="upload-area" id="uploadCard">
-                <label>Step 1: Upload Inventory File</label>
+                <label>Step 1: Upload Inventory Excel</label>
                 <input type="file" id="fileInput" accept=".xlsx, .xls">
             </div>
 
@@ -87,7 +87,6 @@
 
             <div class="card">
                 <label>Step 2: Select Client Name</label>
-                <input type="text" id="clientFilter" placeholder="Type to search client..." onkeyup="filterClients()" style="margin-bottom: 8px;">
                 <select id="clientSelect">
                     <option value="">-- Choose Client --</option>
                 </select>
@@ -126,7 +125,6 @@
 
 <script>
     let inventoryData = [];
-    let allClients = [];
     let activeItem = null;
     let html5QrCode = null;
     let isCameraOpen = false;
@@ -139,7 +137,7 @@
         request.onsuccess = e => {
             let tx = e.target.result.transaction("inventory", "readwrite");
             tx.objectStore("inventory").put(data, "mainData");
-            tx.oncomplete = () => alert("Data saved to local database!");
+            tx.oncomplete = () => alert("Inventory Saved Locally!");
         };
     }
 
@@ -151,8 +149,7 @@
             db.transaction("inventory").objectStore("inventory").get("mainData").onsuccess = ev => {
                 if (ev.target.result) {
                     inventoryData = ev.target.result;
-                    allClients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
-                    populateClientList(allClients);
+                    populateClientDropdown();
                     updateUIState(true);
                 }
             };
@@ -160,13 +157,13 @@
     }
 
     function clearDatabase() {
-        if (confirm("Permanently delete inventory?")) {
+        if (confirm("Delete saved inventory data?")) {
             indexedDB.deleteDatabase(dbName);
             location.reload();
         }
     }
 
-    // --- UI & NAV ---
+    // --- APP FLOW ---
     window.onload = loadFromDB;
     function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
     function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
@@ -186,23 +183,18 @@
             const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array' });
             inventoryData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             saveToDB(inventoryData);
-            allClients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
-            populateClientList(allClients);
+            populateClientDropdown();
             updateUIState(true);
             document.getElementById('loadingOverlay').style.display = 'none';
         };
         reader.readAsArrayBuffer(file);
     });
 
-    function populateClientList(list) {
+    function populateClientDropdown() {
         const sel = document.getElementById('clientSelect');
+        const clients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
         sel.innerHTML = '<option value="">-- Choose Client --</option>';
-        list.forEach(c => { let o = document.createElement('option'); o.value = c; o.innerText = c; sel.appendChild(o); });
-    }
-
-    function filterClients() {
-        const val = document.getElementById('clientFilter').value.toLowerCase();
-        populateClientList(allClients.filter(c => c.toLowerCase().includes(val)));
+        clients.forEach(c => { let o = document.createElement('option'); o.value = c; o.innerText = c; sel.appendChild(o); });
     }
 
     function updateUIState(hasData) {
