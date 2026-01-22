@@ -3,101 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diamond Jewelry Pro-Scanner</title>
+    <title>Jewelry Merchandise Suite</title>
     
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         :root { --primary: #1a2a6c; --gold: #d4af37; --bg: #f8f9fa; --danger: #e74c3c; --success: #27ae60; --grey: #6c757d; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
         
-        .header { text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 20px; }
-        h2 { color: var(--primary); margin-bottom: 5px; }
-        
-        #fileStatus { font-size: 0.8rem; color: var(--success); font-weight: bold; margin-bottom: 5px; display: none; }
-        .btn-danger-outline { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 6px 10px; font-size: 0.75rem; border-radius: 5px; cursor: pointer; width: 100%; margin-bottom: 10px; font-weight: bold;}
+        /* Navigation Styles */
+        .navbar { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .menu-icon { font-size: 1.5rem; cursor: pointer; }
+        .sidebar { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.5s; padding-top: 60px; }
+        .sidebar a { padding: 15px 25px; text-decoration: none; font-size: 1.1rem; color: #818181; display: block; transition: 0.3s; }
+        .sidebar a:hover { color: #f1f1f1; background: #222; }
+        .sidebar .closebtn { position: absolute; top: 0; right: 25px; font-size: 36px; margin-left: 50px; color: white; }
 
+        /* Content Areas */
+        .content-section { display: none; padding: 20px; flex: 1; overflow-y: auto; }
+        .active-section { display: block; }
+
+        /* Reused Components from Scanner */
+        .container { width: 100%; max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 20px; }
         .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
         label { font-size: 0.75rem; font-weight: bold; color: #666; text-transform: uppercase; display: block; margin-bottom: 8px; }
-        
         select, input[type="text"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background: white; }
-        
         button { background: var(--primary); color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
         .btn-open { background: var(--gold); }
         .btn-close { background: var(--danger); }
-        
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-top: 10px; border: 1px solid #ccc; background: #000; }
-        
-        .search-row { display: flex; gap: 5px; margin: 15px 0; }
+        .btn-reset { background: var(--grey); margin-top: 20px; }
         .btn-search { width: auto; margin-top: 0; }
-
-        /* Results Display */
-        #result { display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-top: 10px; border: 1px solid #ccc; background: #000; }
+        .search-row { display: flex; gap: 5px; margin: 15px 0; }
         .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .data-box { background: #fff; border: 1px solid #eee; padding: 8px; border-radius: 6px; }
         .label-txt { font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: bold; }
         .value-txt { font-size: 0.95rem; font-weight: 600; color: #111; display: block; }
-        
-        .filter-section { border-top: 1px solid #eee; margin-top: 15px; padding-top: 15px; }
         #dynVal { margin-top: 10px; padding: 12px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; text-align: center; font-weight: bold; display: none; }
-        
-        .btn-reset { background: var(--grey); margin-top: 20px; }
+        #fileStatus { font-size: 0.8rem; color: var(--success); font-weight: bold; text-align: center; margin-bottom: 5px; display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h2>Jewelry Scanner</h2>
-        <div id="fileStatus">✓ Inventory Loaded</div>
-        <button id="clearBtn" class="btn-danger-outline" onclick="clearData()" style="display:none;">Clear Loaded Data</button>
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="#" onclick="showSection('home')">Home Page</a>
+        <a href="#" onclick="showSection('search-jewelry')">Section A: Search Jewelry</a>
+        <p style="color: #444; padding: 25px; font-size: 0.8rem;">More sections coming soon...</p>
     </div>
 
-    <div class="card" id="uploadCard">
-        <label>1. Upload Inventory Excel</label>
-        <input type="file" id="fileInput" accept=".xlsx, .xls">
+    <div class="navbar">
+        <span class="menu-icon" onclick="openNav()">&#9776; Menu</span>
+        <span id="navTitle">Home</span>
+        <span></span>
     </div>
 
-    <div class="card">
-        <label>2. Select Client Name</label>
-        <select id="clientSelect">
-            <option value="">-- Choose Client First --</option>
-        </select>
-    </div>
-
-    <button id="camToggleBtn" class="btn-open" onclick="toggleCamera()">OPEN CAMERA</button>
-    
-    <div class="search-row">
-        <input type="text" id="manualInput" placeholder="Enter Style No or Jewel Code...">
-        <button class="btn-search" onclick="manualSearch()">Find</button>
-    </div>
-
-    <div id="reader"></div>
-
-    <div id="result">
-        <div class="perm-grid">
-            <div class="data-box"><span class="label-txt">Jewel Code</span><span id="p-jewel" class="value-txt">-</span></div>
-            <div class="data-box"><span class="label-txt">Style No</span><span id="p-style" class="value-txt">-</span></div>
-            <div class="data-box"><span class="label-txt">Sale Price</span><span id="p-price" class="value-txt">-</span></div>
-            <div class="data-box"><span class="label-txt">Category</span><span id="p-cat" class="value-txt">-</span></div>
-            <div class="data-box"><span class="label-txt">Dia Wt</span><span id="p-diawt" class="value-txt">-</span></div>
-            <div class="data-box"><span class="label-txt">Dia Pcs</span><span id="p-diapcs" class="value-txt">-</span></div>
-            <div class="data-box"><span class="label-txt">Gross Wt</span><span id="p-gross" class="value-txt">-</span></div>
-            <div class="data-box"><span class="label-txt">Net Wt</span><span id="p-net" class="value-txt">-</span></div>
-            <div class="data-box" style="grid-column: span 2;"><span class="label-txt">Stone Quality</span><span id="p-stone" class="value-txt">-</span></div>
+    <div id="home" class="content-section active-section">
+        <div class="container" style="text-align: center; padding-top: 50px;">
+            <h1 style="color: var(--primary);">Welcome</h1>
+            <p>Diamond Jewelry Merchandise Suite</p>
+            <p style="color: #666; font-size: 0.9rem;">Select a tool from the menu to get started.</p>
+            <button onclick="showSection('search-jewelry')" style="background: var(--gold); margin-top: 30px;">Go to Search Jewelry</button>
         </div>
-
-        <div class="filter-section">
-            <label>View Other Details</label>
-            <select id="extraFilter" onchange="showExtra()"><option value="">-- Select Detail --</option></select>
-            <div id="dynVal"></div>
-        </div>
-
-        <button class="btn-reset" onclick="resetView()">CLEAR SHOWING DETAILS</button>
     </div>
-</div>
+
+    <div id="search-jewelry" class="content-section">
+        <div class="container">
+            <div class="header">
+                <h2 style="margin:0;">Search Jewelry</h2>
+                <div id="fileStatus">✓ Inventory Loaded</div>
+                <button id="clearBtn" style="background:none; border: 1px solid var(--danger); color: var(--danger); font-size:0.7rem; width: auto; padding: 5px; margin-bottom: 10px; display:none;" onclick="clearData()">Clear Data</button>
+            </div>
+
+            <div class="card" id="uploadCard">
+                <label>1. Upload Excel</label>
+                <input type="file" id="fileInput" accept=".xlsx, .xls">
+            </div>
+
+            <div class="card">
+                <label>2. Select Client Name</label>
+                <select id="clientSelect"><option value="">-- Choose Client First --</option></select>
+            </div>
+
+            <button id="camToggleBtn" class="btn-open" onclick="toggleCamera()">OPEN CAMERA</button>
+            
+            <div class="search-row">
+                <input type="text" id="manualInput" placeholder="Style No or Jewel Code...">
+                <button class="btn-search" onclick="manualSearch()">Find</button>
+            </div>
+
+            <div id="reader"></div>
+
+            <div id="result" style="display:none; border-top: 2px solid #eee; padding-top:15px; margin-top:15px;">
+                <div class="perm-grid">
+                    <div class="data-box"><span class="label-txt">Jewel Code</span><span id="p-jewel" class="value-txt">-</span></div>
+                    <div class="data-box"><span class="label-txt">Style No</span><span id="p-style" class="value-txt">-</span></div>
+                    <div class="data-box"><span class="label-txt">Sale Price</span><span id="p-price" class="value-txt">-</span></div>
+                    <div class="data-box"><span class="label-txt">Category</span><span id="p-cat" class="value-txt">-</span></div>
+                    <div class="data-box"><span class="label-txt">Dia Wt</span><span id="p-diawt" class="value-txt">-</span></div>
+                    <div class="data-box"><span class="label-txt">Dia Pcs</span><span id="p-diapcs" class="value-txt">-</span></div>
+                    <div class="data-box"><span class="label-txt">Gross Wt</span><span id="p-gross" class="value-txt">-</span></div>
+                    <div class="data-box"><span class="label-txt">Net Wt</span><span id="p-net" class="value-txt">-</span></div>
+                    <div class="data-box" style="grid-column: span 2;"><span class="label-txt">Stone Quality</span><span id="p-stone" class="value-txt">-</span></div>
+                </div>
+
+                <div style="border-top:1px solid #eee; margin-top:15px; padding-top:15px;">
+                    <label>View Other Details</label>
+                    <select id="extraFilter" onchange="showExtra()"><option value="">-- Select Detail --</option></select>
+                    <div id="dynVal"></div>
+                </div>
+
+                <button class="btn-reset" onclick="resetView()">CLEAR DETAILS</button>
+            </div>
+        </div>
+    </div>
 
 <script>
     let inventoryData = [];
@@ -105,6 +126,19 @@
     let html5QrCode = null;
     let isCameraOpen = false;
 
+    // --- NAVIGATION LOGIC ---
+    function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
+    function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
+
+    function showSection(sectionId) {
+        document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active-section'));
+        document.getElementById(sectionId).classList.add('active-section');
+        document.getElementById('navTitle').innerText = sectionId === 'home' ? 'Home' : 'Search Jewelry';
+        closeNav();
+        if (isCameraOpen && sectionId !== 'search-jewelry') toggleCamera(); // Auto-stop camera if leaving search
+    }
+
+    // --- SECTION A LOGIC (From previous versions) ---
     window.onload = () => {
         const savedData = localStorage.getItem('jewelInventory');
         if (savedData) {
@@ -125,14 +159,10 @@
         document.getElementById('manualInput').value = '';
         document.getElementById('dynVal').style.display = 'none';
         document.getElementById('extraFilter').selectedIndex = 0;
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function clearData() {
-        if(confirm("Delete all loaded data?")) {
-            localStorage.removeItem('jewelInventory');
-            location.reload(); 
-        }
+        if(confirm("Delete loaded inventory?")) { localStorage.removeItem('jewelInventory'); location.reload(); }
     }
 
     function populateClientDropdown() {
@@ -163,23 +193,18 @@
     async function toggleCamera() {
         const btn = document.getElementById('camToggleBtn');
         const readerDiv = document.getElementById('reader');
-
         if (!isCameraOpen) {
             readerDiv.style.display = 'block';
             if (!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); }
             try {
                 await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 150 } }, (text) => processLookup(text));
-                isCameraOpen = true;
-                btn.innerText = "CLOSE CAMERA";
-                btn.className = "btn-close";
-            } catch (err) { alert("Camera Error: Ensure HTTPS or Firefox."); readerDiv.style.display = 'none'; }
+                isCameraOpen = true; btn.innerText = "CLOSE CAMERA"; btn.className = "btn-close";
+            } catch (err) { alert("Use HTTPS or Firefox."); readerDiv.style.display = 'none'; }
         } else {
             if (html5QrCode) {
                 await html5QrCode.stop();
-                isCameraOpen = false;
-                readerDiv.style.display = 'none';
-                btn.innerText = "OPEN CAMERA";
-                btn.className = "btn-open";
+                isCameraOpen = false; readerDiv.style.display = 'none';
+                btn.innerText = "OPEN CAMERA"; btn.className = "btn-open";
             }
         }
     }
@@ -189,19 +214,16 @@
         if(val) processLookup(val);
     }
 
-    // --- UPDATED: Search by Style No OR Jewel Code ---
     function processLookup(inputVal) {
         const client = document.getElementById('clientSelect').value;
         if (!client) return alert("Select a Client first!");
-
         const searchStr = String(inputVal).trim().toLowerCase();
 
         activeItem = inventoryData.find(row => {
-            const jewelMatch = String(row['Jewel Code']).trim().toLowerCase() === searchStr;
-            const styleMatch = String(row['Style No']).trim().toLowerCase() === searchStr;
-            const clientMatch = String(row['Client Name']).trim() === String(client).trim();
-            
-            return (jewelMatch || styleMatch) && clientMatch;
+            const jMatch = String(row['Jewel Code']).trim().toLowerCase() === searchStr;
+            const sMatch = String(row['Style No']).trim().toLowerCase() === searchStr;
+            const cMatch = String(row['Client Name']).trim() === String(client).trim();
+            return (jMatch || sMatch) && cMatch;
         });
 
         if (activeItem) {
@@ -227,21 +249,15 @@
                 }
             });
             document.getElementById('dynVal').style.display = "none";
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        } else {
-            alert("No match found for: " + inputVal + " with Client: " + client);
-        }
+            document.getElementById('search-jewelry').scrollTo({ top: document.getElementById('search-jewelry').scrollHeight, behavior: 'smooth' });
+        } else { alert("No match found!"); }
     }
 
     function showExtra() {
         const key = document.getElementById('extraFilter').value;
         const disp = document.getElementById('dynVal');
-        if(key && activeItem) {
-            disp.innerText = activeItem[key];
-            disp.style.display = "block";
-        }
+        if(key && activeItem) { disp.innerText = activeItem[key]; disp.style.display = "block"; }
     }
 </script>
-
 </body>
 </html>
