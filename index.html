@@ -12,7 +12,6 @@
         :root { --primary: #1a2a6c; --gold: #d4af37; --bg: #f8f9fa; --danger: #e74c3c; --success: #27ae60; --grey: #6c757d; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden;}
         
-        /* Navigation & Sidebar */
         .navbar { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
         .menu-icon { font-size: 1.5rem; cursor: pointer; }
         .sidebar { height: 100%; width: 0; position: fixed; z-index: 2000; top: 0; left: 0; background-color: #111; overflow-x: hidden; transition: 0.5s; padding-top: 60px; }
@@ -21,11 +20,9 @@
         .sidebar .active-nav { color: var(--gold); border-left: 4px solid var(--gold); }
         .sidebar .closebtn { position: absolute; top: 0; right: 25px; font-size: 36px; color: white; }
 
-        /* Section Handling */
         .content-section { display: none; padding: 20px; height: calc(100vh - 60px); overflow-y: auto; box-sizing: border-box; }
         .active-section { display: block; }
 
-        /* UI Styling */
         .container { width: 100%; max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
         .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
         .upload-area { border: 2px dashed var(--gold); background: #fffdf5; padding: 20px; text-align: center; border-radius: 10px; }
@@ -38,7 +35,6 @@
         .btn-close { background: var(--danger); }
         .btn-reset { background: var(--grey); margin-top: 20px; }
         
-        /* Camera & Results */
         #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-top: 10px; border: 1px solid #ccc; background: #000; }
         .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .data-box { background: #fff; border: 1px solid #eee; padding: 8px; border-radius: 6px; }
@@ -46,8 +42,6 @@
         .value-txt { font-size: 0.95rem; font-weight: 600; color: #111; display: block; }
         
         #loadingOverlay { display: none; text-align: center; padding: 10px; background: #e3f2fd; color: #0d47a1; border-radius: 8px; font-weight: bold; margin-bottom: 15px; }
-        .client-search-box { margin-bottom: 5px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none; }
-        .client-dropdown { border-top-left-radius: 0; border-top-right-radius: 0; }
     </style>
 </head>
 <body>
@@ -56,7 +50,6 @@
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
         <a href="#" id="nav-home" onclick="showSection('home')">Home Page</a>
         <a href="#" id="nav-search" onclick="showSection('search-jewelry')">Section A: Search Jewelry</a>
-        <a href="#" id="nav-section-b" style="opacity: 0.4; cursor: default;">Section B: Coming Soon</a>
     </div>
 
     <div class="navbar">
@@ -68,10 +61,9 @@
     <div id="home" class="content-section active-section">
         <div class="container" style="text-align: center; padding-top: 30px;">
             <h1 style="color: var(--primary);">Jewelry Suite</h1>
-            <p>Diamond Jewelry Merchandise Portal</p>
+            <p>Diamond Merchandise Management</p>
             <div class="card" style="margin-top: 30px; border-color: var(--gold);">
-                <p style="font-size: 0.9rem;">Quick Access Tool:</p>
-                <button onclick="showSection('search-jewelry')" style="background: var(--gold);">Open Inventory Search</button>
+                <button onclick="showSection('search-jewelry')" style="background: var(--gold);">Open Inventory Tool</button>
             </div>
         </div>
     </div>
@@ -79,23 +71,23 @@
     <div id="search-jewelry" class="content-section">
         <div class="container">
             <div class="header" style="text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 15px;">
-                <h2 style="margin:0; color: var(--primary);">Inventory Search</h2>
-                <div id="fileStatus" style="color: var(--success); font-weight: bold; font-size: 0.8rem; display:none; margin-top: 5px;">✓ Data Active (In-Memory)</div>
+                <h2 style="margin:0; color: var(--primary);">Search Jewelry</h2>
+                <div id="fileStatus" style="color: var(--success); font-weight: bold; font-size: 0.8rem; display:none; margin-top: 5px;">✓ Database Active</div>
             </div>
 
-            <div id="loadingOverlay">Processing 50MB File... Please Wait.</div>
+            <div id="loadingOverlay">Syncing Database... Please Wait.</div>
 
             <div class="upload-area" id="uploadCard">
-                <label>1. UPLOAD INVENTORY EXCEL</label>
+                <label>Upload Inventory Excel</label>
                 <input type="file" id="fileInput" accept=".xlsx, .xls">
-                <p style="font-size: 0.7rem; color: #888; margin-top: 8px;">Supports large files (50MB+). Held in RAM for extreme speed.</p>
-                <button id="clearBtn" style="background:none; border: 1px solid var(--danger); color: var(--danger); font-size:0.7rem; margin-top: 10px; display:none;" onclick="clearAllData()">Wipe All Data</button>
             </div>
 
-            <div class="card" style="margin-top:15px;">
-                <label>2. Filter & Select Client</label>
-                <input type="text" id="clientFilter" class="client-search-box" placeholder="Type client name..." onkeyup="filterClients()">
-                <select id="clientSelect" class="client-dropdown" size="4"><option value="">-- No File Uploaded --</option></select>
+            <button id="clearBtn" style="background:none; border: 1px solid var(--danger); color: var(--danger); font-size:0.7rem; margin: 10px 0; display:none;" onclick="clearDatabase()">Wipe Saved Database</button>
+
+            <div class="card" style="margin-top:10px;">
+                <label>Select Client Name</label>
+                <input type="text" id="clientFilter" placeholder="Search Client..." onkeyup="filterClients()" style="margin-bottom:5px;">
+                <select id="clientSelect" size="4"></select>
             </div>
 
             <button id="camToggleBtn" class="btn-open" onclick="toggleCamera()">OPEN CAMERA</button>
@@ -119,13 +111,11 @@
                     <div class="data-box"><span class="label-txt">Net Wt</span><span id="p-net" class="value-txt">-</span></div>
                     <div class="data-box" style="grid-column: span 2;"><span class="label-txt">Stone Quality</span><span id="p-stone" class="value-txt">-</span></div>
                 </div>
-
                 <div style="border-top:1px solid #eee; margin-top:15px; padding-top:15px;">
-                    <label>Additional Details</label>
+                    <label>Other Details</label>
                     <select id="extraFilter" onchange="showExtra()"><option value="">-- Choose Detail --</option></select>
                     <div id="dynVal" style="margin-top: 10px; padding: 12px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; text-align: center; font-weight: bold; display: none;"></div>
                 </div>
-
                 <button class="btn-reset" onclick="resetView()">CLEAR SCREEN</button>
             </div>
         </div>
@@ -138,7 +128,45 @@
     let html5QrCode = null;
     let isCameraOpen = false;
 
-    // Navigation Logic
+    // --- DATABASE (INDEXEDDB) LOGIC ---
+    const dbName = "JewelryDB";
+    function saveToDB(data) {
+        let request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = e => e.target.result.createObjectStore("inventory");
+        request.onsuccess = e => {
+            let db = e.target.result;
+            let tx = db.transaction("inventory", "readwrite");
+            tx.objectStore("inventory").put(data, "mainData");
+            tx.oncomplete = () => alert("Database Synced Locally!");
+        };
+    }
+
+    function loadFromDB() {
+        let request = indexedDB.open(dbName, 1);
+        request.onsuccess = e => {
+            let db = e.target.result;
+            if (!db.objectStoreNames.contains("inventory")) return;
+            db.transaction("inventory").objectStore("inventory").get("mainData").onsuccess = ev => {
+                if (ev.target.result) {
+                    inventoryData = ev.target.result;
+                    allClients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
+                    populateClientList(allClients);
+                    updateUIState(true);
+                }
+            };
+        };
+    }
+
+    function clearDatabase() {
+        if (confirm("Clear local database?")) {
+            indexedDB.deleteDatabase(dbName);
+            location.reload();
+        }
+    }
+
+    // --- APP LOGIC ---
+    window.onload = loadFromDB;
+
     function openNav() { document.getElementById("mySidebar").style.width = "250px"; }
     function closeNav() { document.getElementById("mySidebar").style.width = "0"; }
     function showSection(id) {
@@ -146,35 +174,22 @@
         document.getElementById(id).classList.add('active-section');
         document.getElementById('navTitle').innerText = id === 'home' ? 'Home' : 'Search Jewelry';
         closeNav();
-        if (isCameraOpen && id !== 'search-jewelry') toggleCamera();
     }
 
-    // High-Performance Loading for 50MB Files
     document.getElementById('fileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
-        
         document.getElementById('loadingOverlay').style.display = 'block';
         const reader = new FileReader();
-        
         reader.onload = (event) => {
             const data = new Uint8Array(event.target.result);
-            const workbook = XLSX.read(data, { 
-                type: 'array', 
-                bookSheets: true,
-                cellDates: false,
-                cellText: false 
-            });
+            const workbook = XLSX.read(data, { type: 'array' });
             inventoryData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            
+            saveToDB(inventoryData);
             allClients = [...new Set(inventoryData.map(i => i['Client Name']))].filter(Boolean).sort();
             populateClientList(allClients);
-            
-            document.getElementById('fileStatus').style.display = 'block';
-            document.getElementById('clearBtn').style.display = 'block';
-            document.getElementById('uploadCard').style.display = 'none';
+            updateUIState(true);
             document.getElementById('loadingOverlay').style.display = 'none';
-            alert("Ready: " + inventoryData.length + " Items Processed.");
         };
         reader.readAsArrayBuffer(file);
     });
@@ -186,16 +201,14 @@
     }
 
     function filterClients() {
-        const filter = document.getElementById('clientFilter').value.toLowerCase();
-        const filtered = allClients.filter(c => c.toLowerCase().includes(filter));
-        populateClientList(filtered);
+        const val = document.getElementById('clientFilter').value.toLowerCase();
+        populateClientList(allClients.filter(c => c.toLowerCase().includes(val)));
     }
 
-    function clearAllData() {
-        if(confirm("Confirm: Wipe all loaded inventory?")) {
-            inventoryData = [];
-            location.reload();
-        }
+    function updateUIState(hasData) {
+        document.getElementById('fileStatus').style.display = hasData ? 'block' : 'none';
+        document.getElementById('clearBtn').style.display = hasData ? 'block' : 'none';
+        document.getElementById('uploadCard').style.display = hasData ? 'none' : 'block';
     }
 
     async function toggleCamera() {
@@ -206,7 +219,7 @@
             try {
                 await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => processLookup(text));
                 isCameraOpen = true; btn.innerText = "CLOSE CAMERA"; btn.className = "btn-close";
-            } catch (err) { alert("Camera requires HTTPS or Firefox Browser."); }
+            } catch (err) { alert("Use HTTPS or Firefox."); }
         } else {
             await html5QrCode.stop();
             isCameraOpen = false; document.getElementById('reader').style.display = 'none';
@@ -218,21 +231,9 @@
 
     function processLookup(val) {
         const client = document.getElementById('clientSelect').value;
-        if (!client) return alert("Error: Select Client from the list first!");
-        
+        if (!client) return alert("Select a Client first!");
         const s = String(val).trim().toLowerCase();
-        activeItem = null;
-        
-        // Fast-search loop for large arrays
-        for(let i=0; i < inventoryData.length; i++) {
-            let row = inventoryData[i];
-            if (String(row['Client Name']) === client) {
-                if (String(row['Jewel Code']).toLowerCase() === s || String(row['Style No']).toLowerCase() === s) {
-                    activeItem = row;
-                    break;
-                }
-            }
-        }
+        activeItem = inventoryData.find(r => (String(r['Jewel Code']).toLowerCase() === s || String(r['Style No']).toLowerCase() === s) && String(r['Client Name']) === client);
 
         if (activeItem) {
             document.getElementById('result').style.display = "block";
@@ -251,8 +252,7 @@
             const skip = ['Jewel Code','Style No','Sale Price','Category','Dia Wt','Dia Pcs','Gross Wt','Total Net Wt','Stone Quality'];
             Object.keys(activeItem).forEach(k => { if(!skip.includes(k)) { let o = document.createElement('option'); o.value = k; o.innerText = k; filter.appendChild(o); } });
             document.getElementById('dynVal').style.display = "none";
-            document.getElementById('search-jewelry').scrollTo({ top: document.getElementById('search-jewelry').scrollHeight, behavior: 'smooth' });
-        } else { alert("Not found for this Client: " + val); }
+        } else { alert("No match found!"); }
     }
 
     function showExtra() { 
@@ -261,10 +261,7 @@
         if(key && activeItem) { d.innerText = activeItem[key]; d.style.display = "block"; }
     }
 
-    function resetView() { 
-        document.getElementById('result').style.display = 'none'; 
-        document.getElementById('manualInput').value = ''; 
-    }
+    function resetView() { document.getElementById('result').style.display = 'none'; document.getElementById('manualInput').value = ''; }
 </script>
 </body>
 </html>
