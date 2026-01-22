@@ -13,22 +13,24 @@
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
         
-        .header { text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 20px; position: relative; }
+        .header { text-align: center; border-bottom: 2px solid var(--gold); margin-bottom: 20px; }
         h2 { color: var(--primary); margin-bottom: 10px; }
         
-        #fileStatus { font-size: 0.8rem; color: var(--success); font-weight: bold; margin-bottom: 10px; display: none; }
+        #fileStatus { font-size: 0.8rem; color: var(--success); font-weight: bold; margin-bottom: 5px; display: none; }
         .btn-clear { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 4px 8px; font-size: 0.7rem; border-radius: 5px; cursor: pointer; margin-bottom: 10px; }
-        .btn-clear:hover { background: var(--danger); color: white; }
 
         .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        button { background: var(--primary); color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-scan { background: var(--gold); margin-bottom: 10px; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
         
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-top: 10px; border: 1px solid #ccc; }
+        /* Camera Toggle Button Colors */
+        .btn-open { background: var(--gold); margin-bottom: 10px; }
+        .btn-close { background: var(--danger); margin-bottom: 10px; }
+        
+        #reader { width: 100%; border-radius: 10px; overflow: hidden; display: none; margin-top: 10px; border: 1px solid #ccc; background: #000; }
         
         .search-row { display: flex; gap: 5px; margin: 15px 0; }
         input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
-        .btn-search { width: auto; margin-top: 0; }
+        .btn-search { width: auto; background: var(--primary); }
 
         #result { display: none; margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -37,10 +39,10 @@
         .value { font-size: 0.95rem; font-weight: 600; color: #111; display: block; }
         
         .filter-section { border-top: 1px solid #eee; margin-top: 15px; padding-top: 15px; }
-        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; }
         #dynVal { margin-top: 10px; padding: 12px; background: #fff9e6; border: 1px solid var(--gold); border-radius: 8px; text-align: center; font-weight: bold; display: none; }
         
-        .error-msg { color: var(--danger); background: #fee; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; display: none; border: 1px solid var(--danger); }
+        .error-msg { color: var(--danger); background: #fee; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -57,7 +59,7 @@
         <input type="file" id="fileInput" accept=".xlsx, .xls">
     </div>
 
-    <button class="btn-scan" id="camBtn" onclick="requestCamera()">STEP 2: TAP TO OPEN CAMERA</button>
+    <button id="camToggleBtn" class="btn-open" onclick="toggleCamera()">OPEN CAMERA</button>
     
     <div class="search-row">
         <input type="text" id="manualInput" placeholder="Enter Jewel Code...">
@@ -91,6 +93,7 @@
     let inventoryData = [];
     let activeItem = null;
     let html5QrCode = null;
+    let isCameraOpen = false;
 
     window.onload = () => {
         const savedData = localStorage.getItem('jewelInventory');
@@ -107,11 +110,8 @@
     }
 
     function clearData() {
-        if(confirm("Are you sure you want to delete the loaded inventory data?")) {
+        if(confirm("Delete loaded inventory?")) {
             localStorage.removeItem('jewelInventory');
-            inventoryData = [];
-            updateUIState(false);
-            document.getElementById('result').style.display = 'none';
             location.reload(); 
         }
     }
@@ -124,37 +124,43 @@
             inventoryData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             localStorage.setItem('jewelInventory', JSON.stringify(inventoryData));
             updateUIState(true);
-            alert("Inventory Loaded Successfully!");
+            alert("Inventory Loaded!");
         };
         reader.readAsArrayBuffer(e.target.files[0]);
     });
 
-    async function requestCamera() {
-        const errorDiv = document.getElementById('errorMessage');
-        errorDiv.style.display = 'none';
-        document.getElementById('reader').style.display = 'block';
+    // --- NEW: Toggle Camera Logic ---
+    async function toggleCamera() {
+        const btn = document.getElementById('camToggleBtn');
+        const readerDiv = document.getElementById('reader');
 
-        // Check for HTTPS vs Local File
-        if (location.protocol === 'file:' && /Chrome|Safari/.test(navigator.userAgent)) {
-            errorDiv.innerHTML = "<b>Security Error:</b> Chrome/Safari block cameras on local files. <br>Please use <b>Firefox</b> or host this on a <b>Web Server (HTTPS)</b>.";
-            errorDiv.style.display = 'block';
-            return;
-        }
-
-        if (!html5QrCode) {
-            html5QrCode = new Html5Qrcode("reader");
-        }
-
-        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-
-        try {
-            await html5QrCode.start({ facingMode: "environment" }, config, (text) => processLookup(text));
-            document.getElementById('camBtn').innerText = "CAMERA ACTIVE";
-            document.getElementById('camBtn').style.background = "#27ae60";
-        } catch (err) {
-            errorDiv.innerHTML = "<b>Camera Error:</b> Permission Denied. <br>Check browser settings or ensure you are using HTTPS.";
-            errorDiv.style.display = 'block';
-            console.error(err);
+        if (!isCameraOpen) {
+            // Start Camera
+            readerDiv.style.display = 'block';
+            if (!html5QrCode) { html5QrCode = new Html5Qrcode("reader"); }
+            
+            try {
+                await html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    { fps: 10, qrbox: { width: 250, height: 150 } },
+                    (text) => processLookup(text)
+                );
+                isCameraOpen = true;
+                btn.innerText = "CLOSE CAMERA";
+                btn.className = "btn-close";
+            } catch (err) {
+                alert("Camera Error: Ensure you are using HTTPS or Firefox.");
+                readerDiv.style.display = 'none';
+            }
+        } else {
+            // Stop Camera
+            if (html5QrCode) {
+                await html5QrCode.stop();
+                isCameraOpen = false;
+                readerDiv.style.display = 'none';
+                btn.innerText = "OPEN CAMERA";
+                btn.className = "btn-open";
+            }
         }
     }
 
@@ -164,7 +170,7 @@
     }
 
     function processLookup(barcode) {
-        if (inventoryData.length === 0) return alert("Please upload Excel first!");
+        if (inventoryData.length === 0) return alert("Upload Excel first!");
         
         activeItem = inventoryData.find(row => String(row['Jewel Code']).trim() === String(barcode).trim());
 
@@ -192,6 +198,7 @@
                 }
             });
             document.getElementById('dynVal').style.display = "none";
+            // Auto-scroll to results on mobile
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         } else {
             alert("Code " + barcode + " not found!");
